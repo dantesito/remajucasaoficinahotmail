@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
+from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+from .configuaracioncrawlerapp import schema_get_captcha
 from base64 import b64decode
 from playwright.async_api import Page, BrowserContext
 
@@ -14,11 +16,14 @@ async def joder(response):
     )
 
     # 2) Configure the crawler run
+    strategy = JsonCssExtractionStrategy(schema_get_captcha)
     crawler_run_config = CrawlerRunConfig(
-        js_code="window.scrollTo(0, document.body.scrollHeight);",
-        wait_for="body",
+        #js_code="window.scrollTo(0, document.body.scrollHeight);",
+        #wait_for="body",
+        extraction_strategy=strategy,
         cache_mode=CacheMode.BYPASS,
         screenshot=True,
+
     )
 
     # 3) Create the crawler instance
@@ -140,7 +145,7 @@ async def joder(response):
 
     if result.success:
         print("\nCrawled URL:", result.url)
-        print("HTML length:", len(result.html))
+        print(result.markdown)
         if result.screenshot:
             with open("result.png", "wb") as f:
                 f.write(b64decode(result.screenshot))
